@@ -149,7 +149,11 @@ def estimate_progress(
 ) -> float:
     current_time = time.time()
     processed_pages += 1
-    if current_time - last_time > 1:
+    if (
+        processed_pages == 1
+        or processed_pages == all_pages
+        or current_time - last_time >= 0.5
+    ):
         remaining_pages = all_pages - processed_pages
         estimate_seconds = (
             (current_time - start_time) / processed_pages * remaining_pages
@@ -807,7 +811,9 @@ def reprocess_wiktionary(
                 wxr.wtp.get_all_pages(
                     process_ns_ids, True, "wikitext", search_pattern
                 ),
-                chunksize=100,  # default is 1 too slow
+                # Return results frequently enough for responsive progress
+                # updates while still batching work to limit IPC overhead.
+                chunksize=10,
             )
         ):
             wxr.config.merge_return(wtp_stats)

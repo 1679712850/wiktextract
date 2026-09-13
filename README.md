@@ -360,6 +360,19 @@ An example of a typical invocation for extracting all data would be:
 wiktwords --all --all-languages --out data.json --edition en enwiktionary-20230801-pages-articles.xml.bz2
 ```
 
+Add `--offline` to extract only from local dumps, page files, and databases:
+
+```
+wiktwords --offline --all --edition en --out data.json enwiktionary-20230801-pages-articles.xml.bz2
+```
+
+Offline mode disables Wiki API requests for interwiki maps and Wikidata
+queries/downloads, including in worker processes. Existing cached Wiki data
+remains available; missing supplementary data is omitted without downloading
+or recording empty results in the cache. Local template expansion and
+extraction still run normally. English extraction requires the NLTK Brown
+corpus to be installed beforehand (`python -m nltk.downloader brown`).
+
 If you wish to modify the code or test processing individual pages,
 the following may also be useful:
 
@@ -380,6 +393,7 @@ wiktwords --db-path en_20230801.db --edition en --all --all-languages --out outf
 The following command-line options can be used to control its operation:
 
 * --out FILE: specifies the name of the file to write (specifying "-" as the file writes to stdout)
+* --offline: use local data only and disable Wiki network lookups
 * --all-languages: extract words for all available languages
 * --language-code LANGUAGE_CODE: extracts the given language (this option may be specified multiple times; defaults to dump file language code and `mul`(Translingual))
 * --language-name LANGUAGE_NAME: Similar to `--language-code` except this option accepts language name

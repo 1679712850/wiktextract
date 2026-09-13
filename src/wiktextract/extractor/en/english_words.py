@@ -13,7 +13,7 @@ from .form_descriptions_known_firsts import known_firsts  # w/ our additions
 
 # Download Brown corpus if not already downloaded
 try:
-    nltk.data.find("corpora/brown.zip")
+    brown.ensure_loaded()
 except LookupError:
     nltk.download("brown", quiet=True)
 

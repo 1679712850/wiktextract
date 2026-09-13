@@ -300,6 +300,12 @@ def main():
     )
     parser.add_argument("--quiet", default=False, action="store_true")
     parser.add_argument(
+        "--offline",
+        action="store_true",
+        help="Extract using only local dumps, pages and cached data; "
+        "disable Wiki API and Wikidata network access",
+    )
+    parser.add_argument(
         "--search-pattern",
         type=str,
         default=None,
@@ -309,6 +315,22 @@ def main():
         "functions only with ready database file",
     )
     args = parser.parse_args()
+
+    if args.offline and (
+        args.dump_file_language_code == "en" or args.debug_cell_text
+    ):
+        # English extraction imports a vocabulary that otherwise downloads
+        # Brown automatically. Fail before opening output or importing it.
+        from nltk.corpus import brown
+
+        try:
+            brown.ensure_loaded()
+        except LookupError:
+            parser.error(
+                "--offline requires the local NLTK Brown corpus for English "
+                "extraction. Install it beforehand with: "
+                "python -m nltk.downloader brown"
+            )
 
     if not args.quiet:
         logger.setLevel(logging.DEBUG)
@@ -401,7 +423,14 @@ def main():
         print("Alternatively, --db-path with --page can be used.")
         sys.exit(1)
 
-    wtp = Wtp(
+    wtp_class = Wtp
+    if args.offline:
+        from .offline import OfflineWtp
+
+        wtp_class = OfflineWtp
+        logger.info("Offline mode: Wiki network lookups are disabled")
+
+    wtp = wtp_class(
         db_path=args.db_path,
         lang_code=args.dump_file_language_code,
         template_override_funcs=template_override_fns
